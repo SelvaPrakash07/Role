@@ -26,11 +26,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.google.common.base.Strings;
 
-/******************************************************************************
- * Author * Modified Date * Version * Description *
- ******************************************************************************
- * Coherent * 08/05/2019 * V1.0 * JwtFilter class * *
- *****************************************************************************/
 
 public class JwtFilter extends OncePerRequestFilter {
 
