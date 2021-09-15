@@ -31,6 +31,7 @@ public class JwtUtil {
         JwtBuilder builder = Jwts.builder().setSubject(subject).claim("userId", userId).claim("Authorities", authorities)
                 .claim("userName", userName).setIssuedAt(now)
                 .signWith(SignatureAlgorithm.HS256, signingKey);
+
         return builder.compact();
     }
 
@@ -39,7 +40,9 @@ public class JwtUtil {
 
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
             return bearerToken.substring(7, bearerToken.length());
-        }return null;
+        }
+
+        return null;
     }
 
     public List<Role> getRoleNameFromJWT(String token, String signingKey) {

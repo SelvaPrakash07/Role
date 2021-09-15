@@ -4,6 +4,7 @@ package com.example.firstapp.Service;
 import com.example.firstapp.Dto.RoleDto;
 import com.example.firstapp.Dto.UserDto;
 import com.example.firstapp.Dto.UserSignupRequestVO;
+import com.example.firstapp.ExceptionHandler.ControllerException;
 import com.example.firstapp.Model.Role;
 import com.example.firstapp.Model.User;
 import com.example.firstapp.Model.UserRole;
@@ -47,22 +48,28 @@ public class ServiceImpl implements Service {
     }
 
     private void saveRole(List<RoleDto> roles, User userDetail) {
+        BaseResponse baseResponse = new BaseResponse();
         try {
             List<UserRole> userRoles = new LinkedList<>();
             if (Objects.nonNull(roles) && roles.size() > 0) {
                 roles.stream().forEachOrdered(role -> {
                     Role role1 = roleRepository.findById(role.getId())
-                            .orElseThrow(() -> new RuntimeException("role is not here"));
+                            .orElseThrow(() -> new ControllerException("role is not here","606"));
                     UserRole userRole = new UserRole();
                     userRole.setUser(userDetail);
                     userRole.setRole(role1);
                     userRoles.add(userRole);
                 });
                 userRoleRepository.saveAll(userRoles);
+                baseResponse.setStatusMessage("success");
+                baseResponse.setStatusCode("200");
+                baseResponse.setData(userRoles);
+
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (NoSuchElementException e) {
+           throw new ControllerException("901","something is wrong check It");
         }
+      return ;
     }
 
     @Override
@@ -83,7 +90,7 @@ public class ServiceImpl implements Service {
                 userSignupRequestVO.setId(user.get().getId());
                 userSignupRequestVO.setRoleList(user.get().getRoles());
                 userSignupRequestVO.setJwtToken(Token);
-            }
+            }else throw new ControllerException("USER NOT FOUND","900");
         } catch (Exception e) {
             e.printStackTrace(); }
         BaseResponse baseResponse = new BaseResponse();
@@ -97,7 +104,7 @@ public class ServiceImpl implements Service {
         Optional<User> userDetail = userRepository.findByUserName(username);
         List<Role> roles = new LinkedList<>();
         if (userDetail == null) {
-            throw new UsernameNotFoundException("user not found");
+            throw new ControllerException("USER NOT FOUND","900");
         }
         else{
             List<UserRole> userRoles = userRoleRepository.findByUserId(userDetail.get().getId());
@@ -105,13 +112,14 @@ public class ServiceImpl implements Service {
                 Role role = userRole.getRole();
                 roles.add(role);
     });
-            return new org.springframework.security.core.userdetails.User(userDetail.get().getUserName(), userDetail.get().getPassword(), getAuthority(userDetail.get().getRoles()));
+            return new org.springframework.security.core.userdetails.User(userDetail.get().getUserName(), userDetail.get().getPassword(), getAuthority(roles));
         }
     }
-    private List getAuthority(List<UserRole> role){
+
+    private List getAuthority(List<Role> role){
         List authorities=new ArrayList();
         role.stream().forEachOrdered(role1 -> {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" +role1.getRole().getRoleName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" +role1.getRoleName()));
         });
         return authorities;
     }
